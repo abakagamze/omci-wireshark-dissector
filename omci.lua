@@ -647,6 +647,7 @@ setmetatable(omci_def, mt2)
 
 -- GUI field definition
 local f = omciproto.fields
+base={}
 f.tci = ProtoField.uint16("omciproto.tci", "Transaction Correlation ID")
 f.msg_type_db = ProtoField.uint8("omciproto.msg_type_db", "Destination Bit", base.HEX, nil, 0x80)
 f.msg_type_ar = ProtoField.uint8("omciproto.msg_type_ar", "Acknowledge Request", base.HEX, nil, 0x40)
