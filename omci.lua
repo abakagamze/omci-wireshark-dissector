@@ -1,6 +1,6 @@
---[[ 
+--[[
    Wireshark dissector for ITU-T G984.4 and G988 OMCI frames.
-   Copyright (C) 2012 Technicolor 
+   Copyright (C) 2012 Technicolor
    Authors:
    Dirk Van Aken (dirk.vanaken@technicolor.com),
    Olivier Hardouin (olivier.hardouin@technicolor.com)
@@ -18,25 +18,25 @@
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
- 
+
    Description:
    Wireshark dissector for ONT Management and Control Interface (OMCI) protocol (ITU-T G984.4, ITU-T G988)
    This protocol is used on Gigabit Passive Optical Network (GPON) between Optical Line Termition (OLT, the network side) and Optical Network Termination (ONT, the end user side) units.
    This is management protocol used to configure services (like Ethernet, QoS, Video overlay, Tx/Rx control) on the ONT.
    The dissector applies on UDP or Ethernet packet that contains a copy of OMCI data going between ONT and OLT as explained in appendix III of ITU-T G988
-  
+
    Links that were used to create this dissector:
    General presentation about WS dissector in Lua: http://sharkfest.wireshark.org/sharkfest.09/DT06_Bjorlykke_Lua%20Scripting%20in%20Wireshark.pdf
    Standard Wireshark dissector: http://www.wireshark.org/docs/wsug_html_chunked/wslua_dissector_example.html
    Lua Support in Wireshark: http://www.wireshark.org/docs/wsug_html_chunked/wsluarm.html
    Nice Wireshark dissector example: http://thomasfischer.biz/?p=175
    Another nice Wireshark dissector example: http://code.google.com/p/eathena/source/browse/devel/FlavioJS/athena.lua?r=9341
-  
+
    The dissector binary to hexadecimal conversion, module available at http://www.dialectronics.com/Lua/code/BinDecHex.shtml
-  
+
    Note from the author:
    *) Not all ME classes described in the OMCI standards are supported in this dissector (any support to complete the list is very welcome)
-   *) This implementation is the first LUA SW written by the author. It (certainly) could be more efficient (any comment is welcome) 
+   *) This implementation is the first LUA SW written by the author. It (certainly) could be more efficient (any comment is welcome)
 
 --]]
 
@@ -50,7 +50,7 @@ function omciproto.init()
 end
 
 local msgtype_meta = {
-  __index = function(t, k)   
+  __index = function(t, k)
     if k < 4 or k > 28 then
       return "Reserved"
     end
@@ -87,7 +87,7 @@ local msgtype = {
 setmetatable(msgtype, msgtype_meta)
 
 local msg_result_meta = {
-  __index = function(t, k)   
+  __index = function(t, k)
     if k == 7 or k == 8 or k > 9 then
       return "Unknown"
     end
@@ -113,8 +113,8 @@ local test_message_name_meta = {
 			return "Reserved for future use"
 		elseif k == 7 then
 			return "Self test"
-		elseif k > 7 and k <=255 then 
-			return "Vendor specific" 
+		elseif k > 7 and k <=255 then
+			return "Vendor specific"
 		else
 			return "***ERROR: Not a Test ID*** (" .. k .. ")"
 		end
@@ -123,15 +123,15 @@ local test_message_name_meta = {
 setmetatable(test_message_name, test_message_name_meta)
 
 local mt2 = {
-  __index = function(t2, k)   
+  __index = function(t2, k)
 	local returntable = {}
 	if k >= 172 and k <= 239 then
 		returntable.me_class_name= "Reserved for future B-PON managed entities"
 	elseif k >= 240 and k <= 255 then
 		returntable.me_class_name= "Reserved for vendor-specific managed entities"
-   	elseif k >= 343 and k <= 65279 then 
-		returntable.me_class_name= "Reserved for future standardization" 
-	elseif k >= 65280 and k <= 65535 then 
+   	elseif k >= 343 and k <= 65279 then
+		returntable.me_class_name= "Reserved for future standardization"
+	elseif k >= 65280 and k <= 65535 then
 		returntable.me_class_name= "Reserved for vendor-specific use"
 	else
 		returntable.me_class_name= "***TBD*** (" .. k .. ")"
@@ -200,8 +200,8 @@ local omci_def = {
 	{ attname="Late Collision Counter", length=4, setbycreate=false },
 	{ attname="Frames too long", length=4, setbycreate=false },
 	{ attname="Buffer overflows on Receive", length=4, setbycreate=false },
-	{ attname="Buffer overflows on Transmit", length=4, setbycreate=false },	
-	{ attname="Single Collision Frame Counter", length=4, setbycreate=false },	
+	{ attname="Buffer overflows on Transmit", length=4, setbycreate=false },
+	{ attname="Single Collision Frame Counter", length=4, setbycreate=false },
 	{ attname="Multiple Collisions Frame Counter", length=4, setbycreate=false },
 	{ attname="SQE counter", length=4, setbycreate=false },
 	{ attname="Deferred Transmission Counter", length=4, setbycreate=false },
@@ -213,7 +213,7 @@ local omci_def = {
 [44] = { me_class_name = "Vendor Specific",
 	{ attname="Sub-Entity", length=1, setbycreate=true },
 	subentity_attr = {}},
-		
+
 [45] = { me_class_name = "MAC Bridge Service Profile",
 	{ attname="Spanning tree ind", length=1, setbycreate=true },
 	{ attname="Learning ind", length=1, setbycreate=true },
@@ -254,10 +254,10 @@ local omci_def = {
 [52] = { me_class_name = "MAC Bridge Port PM History Data",
 	{ attname="Interval end time", length=1, setbycreate=false },
 	{ attname="Threshold data 1/2 id", length=2, setbycreate=true },
-	{ attname="Forwarded frame counter", length=4, setbycreate=false },	
-	{ attname="Delay exceeded discard counter", length=4, setbycreate=false },	
-	{ attname="MTU exceeded discard counter", length=4, setbycreate=false },	
-	{ attname="Received frame counter", length=4, setbycreate=false },	
+	{ attname="Forwarded frame counter", length=4, setbycreate=false },
+	{ attname="Delay exceeded discard counter", length=4, setbycreate=false },
+	{ attname="MTU exceeded discard counter", length=4, setbycreate=false },
+	{ attname="Received frame counter", length=4, setbycreate=false },
 	{ attname="Received and discarded counter", length=4, setbycreate=false }},
 
 [79] = { me_class_name = "MAC bridge port filter preassign table",
@@ -277,7 +277,7 @@ local omci_def = {
 	{attname="ARC",	length=1, setbycreate=false},
 	{attname="ARC Interval", length=1, setbycreate=false},
 	{attname="Power Control", length=1, setbycreate=false}},
-	
+
 [84] = { me_class_name = "VLAN tagging filter data",
 	{attname="VLAN filter list", length=24, setbycreate=true},
 	{attname="Forward operation", length=1, setbycreate=true},
@@ -287,7 +287,7 @@ local omci_def = {
 	{ attname="Interval end time", length=1, setbycreate=false },
 	{ attname="Threshold data 1/2 id", length=2, setbycreate=true },
 	{ attname="PPPoE filtered frame counter", length=4, setbycreate=false }},
-	
+
 [90] = { me_class_name = "PPTP Video ANI",
 	{attname="Administrative State", length=1, setbycreate=false},
 	{attname="Operational State", length=1, setbycreate=false},
@@ -302,10 +302,10 @@ local omci_def = {
 	{attname="Signal Level max", length=1,	setbycreate=false},
 	{attname="Pilot Frequency", length=4,	setbycreate=false},
 	{attname="AGC Mode", length=1,	setbycreate=false},
-	{attname="AGC Setting", length=1,	setbycreate=false},	
+	{attname="AGC Setting", length=1,	setbycreate=false},
 	{attname="Video Lower Optical Threshold", length=1, setbycreate=false},
 	{attname="Video Upper Optical Threshold", length=1, setbycreate=false}},
- 
+
  [130] = { me_class_name = "802.1P Mapper Service Profile",
 	{attname="TP Pointer",					length=2,  setbycreate=true},
 	{attname="Interwork TP pointer for P-bit priority 0",	length=2,  setbycreate=true},
@@ -325,7 +325,7 @@ local omci_def = {
 	{attname="OLT vendor id",					length=4,  setbycreate=false},
 	{attname="Equipment id",	length=20,  setbycreate=false},
 	{attname="OLT version",	length=14,  setbycreate=false}},
-				
+
 [133] = { me_class_name = "ONT Power Shedding",
 	{ attname="Restore power timer reset interval", length=2, setbycreate=false },
 	{ attname="Data class shedding interval", length=2, setbycreate=false },
@@ -359,12 +359,12 @@ local omci_def = {
 	{ attname="Association type", length=1, setbycreate=true },
 	{ attname="Received frame VLAN tagging operation table max size", length=2, setbycreate=false },
 	{ attname="Input TPID", length=2, setbycreate=false },
-	{ attname="Output TPID", length=2, setbycreate=false },	
+	{ attname="Output TPID", length=2, setbycreate=false },
 	{ attname="Downstream mode", length=1, setbycreate=false },
 	{ attname="Received frame VLAN tagging operation table", length=16, setbycreate=false },
 	{ attname="Associated ME pointer", length=2, setbycreate=true },
 	{ attname="DSCP to P-bit mapping", length=24, setbycreate=false }},
-	
+
 [256] = { me_class_name = "ONT-G",
 	{ attname="Vendor Id", length=4, setbycreate=false },
 	{ attname="Version", length=14, setbycreate=false },
@@ -413,7 +413,7 @@ local omci_def = {
 [264] = { me_class_name = "UNI-G",
 	{ attname="Config option status", length=2, setbycreate=false },
 	{ attname="Administrative state", length=1, setbycreate=false }},
-	
+
 [266] = { me_class_name = "GEM interworking Termination Point",
 	{ attname="GEM port network CTP connectivity pointer", length=2, setbycreate=true },
 	{ attname="Interworking option", length=1, setbycreate=true },
@@ -499,7 +499,7 @@ local omci_def = {
 	{ attname="traffic shed pointer", length=2, setbycreate=false },
 	{ attname="policy", length=1, setbycreate=false },
 	{ attname="priority/weight", length=1, setbycreate=false }},
-	
+
 [279] = { me_class_name = "Protection data",
 	{ attname="Working ANI-G pointer", length=2, setbycreate=false },
 	{ attname="Protection ANI-G pointer", length=2, setbycreate=false },
@@ -546,16 +546,16 @@ local omci_def = {
 	{ attname="Packets", length=4, setbycreate=false },
 	{ attname="Broadcast Packets", length=4, setbycreate=false },
 	{ attname="Multicast Packets", length=4, setbycreate=false },
-	{ attname="Undersize Packets", length=4, setbycreate=false },	
-	{ attname="Fragments", length=4, setbycreate=false },	
-	{ attname="Jabbers", length=4, setbycreate=false },	
+	{ attname="Undersize Packets", length=4, setbycreate=false },
+	{ attname="Fragments", length=4, setbycreate=false },
+	{ attname="Jabbers", length=4, setbycreate=false },
 	{ attname="Packets 64 Octets", length=4, setbycreate=false },
 	{ attname="Packets 65 to 127 Octets", length=4, setbycreate=false },
 	{ attname="Packets 128 to 255 Octets", length=4, setbycreate=false },
 	{ attname="Packets 256 to 511 Octets", length=4, setbycreate=false },
 	{ attname="Packets 512 to 1023 Octets", length=4, setbycreate=false },
 	{ attname="Packets 1024 to 1518 Octets", length=4, setbycreate=false }},
-	
+
 [297] = { me_class_name = "Port mapping package-G",
 	{ attname="Max ports", length=1, setbycreate=false },
 	{ attname="Port list 1", length=16, setbycreate=false },
@@ -575,12 +575,12 @@ local omci_def = {
 	{ attname="Upstream IGMP tag control", length=1, setbycreate=true },
 	{ attname="Upstream IGMP rate", length=4, setbycreate=true },
 	{ attname="Dynamic access control list table", length=24, setbycreate=false },
-	{ attname="Static access control list table", length=24, setbycreate=false },	
-	{ attname="Lost groups list table", length=10, setbycreate=false },		
-	{ attname="Robustness", length=1, setbycreate=true },	
-	{ attname="Querier IP address", length=4, setbycreate=true },		
-	{ attname="Query interval", length=4, setbycreate=true },		
-	{ attname="Query max response time", length=4, setbycreate=true },		
+	{ attname="Static access control list table", length=24, setbycreate=false },
+	{ attname="Lost groups list table", length=10, setbycreate=false },
+	{ attname="Robustness", length=1, setbycreate=true },
+	{ attname="Querier IP address", length=4, setbycreate=true },
+	{ attname="Query interval", length=4, setbycreate=true },
+	{ attname="Query max response time", length=4, setbycreate=true },
 	{ attname="Last member query interval", length=4, setbycreate=false }},
 
 [310] = { me_class_name = "Multicast subscriber config info",
@@ -588,14 +588,14 @@ local omci_def = {
 	{ attname="Multicast operations profile pointer", length=2, setbycreate=true },
 	{ attname="Max simultaneous groups", length=2, setbycreate=true },
 	{ attname="Max multicast bandwidth", length=4, setbycreate=true },
-	{ attname="Bandwidth enforcement", length=1, setbycreate=true }},	
-	
+	{ attname="Bandwidth enforcement", length=1, setbycreate=true }},
+
 [311] = { me_class_name = "Multicast Subscriber Monitor",
 	{ attname="ME type", length=1, setbycreate=true },
 	{ attname="Current multicast bandwidth", length=4, setbycreate=false },
 	{ attname="Max Join messages counter", length=4, setbycreate=false },
 	{ attname="Bandwidth exceeded counter:", length=4, setbycreate=false },
-	{ attname="Active group list table", length=24, setbycreate=false }},	
+	{ attname="Active group list table", length=24, setbycreate=false }},
 
 	[312] = { me_class_name = "FEC PM History Data",
 	{ attname="Interval end time", length=1, setbycreate=false },
@@ -614,8 +614,8 @@ local omci_def = {
 	{ attname="Packets", length=4, setbycreate=false },
 	{ attname="Broadcast Packets", length=4, setbycreate=false },
 	{ attname="Multicast Packets", length=4, setbycreate=false },
-	{ attname="CRC Errored Packets", length=4, setbycreate=false },	
-	{ attname="Undersize Packets", length=4, setbycreate=false },	
+	{ attname="CRC Errored Packets", length=4, setbycreate=false },
+	{ attname="Undersize Packets", length=4, setbycreate=false },
 	{ attname="Oversize Packets", length=4, setbycreate=false },
 	{ attname="Packets 64 Octets", length=4, setbycreate=false },
 	{ attname="Packets 65 to 127 Octets", length=4, setbycreate=false },
@@ -632,8 +632,8 @@ local omci_def = {
 	{ attname="Packets", length=4, setbycreate=false },
 	{ attname="Broadcast Packets", length=4, setbycreate=false },
 	{ attname="Multicast Packets", length=4, setbycreate=false },
-	{ attname="CRC Errored Packets", length=4, setbycreate=false },	
-	{ attname="Undersize Packets", length=4, setbycreate=false },	
+	{ attname="CRC Errored Packets", length=4, setbycreate=false },
+	{ attname="Undersize Packets", length=4, setbycreate=false },
 	{ attname="Oversize Packets", length=4, setbycreate=false },
 	{ attname="Packets 64 Octets", length=4, setbycreate=false },
 	{ attname="Packets 65 to 127 Octets", length=4, setbycreate=false },
@@ -654,8 +654,8 @@ f.msg_type_ak = ProtoField.uint8("omciproto.msg_type_ak", "Acknowledgement", bas
 f.msg_type_mt = ProtoField.uint8("omciproto.msg_type_mt", "Message Type", base.DEC, msgtype, 0x1F)
 f.dev_id = ProtoField.uint8("omciproto.dev_id", "Device Identifier", base.HEX)
 f.me_id = ProtoField.uint16("omciproto.me_id", "Managed Entity Instance", base.HEX)
-f.me_class = ProtoField.uint16("omciproto.me_class", "Managed Entity Class", base.DEC) 
-f.me_class_str = ProtoField.string("omciproto.me_class_str", "Managed Entity Class") 
+f.me_class = ProtoField.uint16("omciproto.me_class", "Managed Entity Class", base.DEC)
+f.me_class_str = ProtoField.string("omciproto.me_class_str", "Managed Entity Class")
 f.attribute_mask = ProtoField.uint16("omciproto.attribtute_mask", "Attribute Mask", base.HEX, nil, 0xFFFF)
 f.attribute = ProtoField.bytes("omciproto.attribute", "Attribute")
 f.content = ProtoField.bytes("omciproto.content", "Message Content")
@@ -674,12 +674,12 @@ function omciproto.dissector (buffer, pinfo, tree)
 
 	-- Start analysing data
 	local offset = 0
-	
+
 	-- OMCI Transaction Correlation Identifier
 	local tci = buffer(offset, 2)
 	subtree:add(f.tci, tci)
 	offset = offset +  2
-	
+
 	-- OMCI Message Type
 	local msg_type = buffer(offset, 1)
 	local msg_type_mt = msgtype[msg_type:bitfield(3,5)]
@@ -691,24 +691,24 @@ function omciproto.dissector (buffer, pinfo, tree)
 	msgtype_subtree:add(f.msg_type_ak, msg_type)
 	msgtype_subtree:add(f.msg_type_mt, msg_type)
 	offset = offset +  1
-	
+
 	-- OMCI Device ID
 	local dev_id = buffer(offset, 1)
 	subtree:add(f.dev_id, dev_id)
 	offset = offset +  1
-	
+
 	-- OMCI Message Entity Class & Instance
 	local me_class = buffer(offset, 2)
 	local me_instance = buffer(offset + 2, 2)
 	local me_class_name = omci_def[me_class:uint()].me_class_name
-	
+
 	local devid_subtree = subtree:add(buffer(offset, 4), "Message Identifier, ME Class = " .. me_class_name .. ", Instance = " .. me_instance:uint())
 --	devid_subtree:add(f.me_class, me_class)
 	devid_subtree:add(f.me_class_str, me_class_name .. " (" .. me_class .. ")")
 	devid_subtree:add(f.me_id, me_instance)
 	offset = offset +  4
-	
-	-- OMCI Attributes and/or message result	
+
+	-- OMCI Attributes and/or message result
 	local content = buffer(offset, 32)
 	if( (msg_type_mt == "Get" or msg_type_mt == "Get Current Data") and msg_type_ar == 1 and msg_type_ak == 0) then
 		local attribute_mask = content(0, 2)
@@ -763,9 +763,9 @@ function omciproto.dissector (buffer, pinfo, tree)
 		end
 	end
 
-	if((msg_type_mt == "Set" or 
+	if((msg_type_mt == "Set" or
 		msg_type_mt == "Create" or
-		msg_type_mt == "MIB Reset" or 
+		msg_type_mt == "MIB Reset" or
 		msg_type_mt == "Test" ) and msg_type_ar == 0 and msg_type_ak == 1) then
 		subtree:add(content(0,1), "Result: " .. msg_result[content(0,1):uint()] .. " (" .. content(0,1) .. ")")
 	end
@@ -813,25 +813,25 @@ function omciproto.dissector (buffer, pinfo, tree)
 				local attr_bytes = content(attribute_offset, attr.length)
 				content_subtree:add(attr_bytes, string.format("%2.2d", i) .. ": " .. attr.attname .. " (" .. attr_bytes .. ")")
 				attribute_offset = attribute_offset + attr.length
-			end			
+			end
 		end
 		me_class_name = me_class_name .. " (" .. omci_def[upload_me_class:uint()].me_class_name .. ")"
 	end
 
 	if(msg_type_mt == "Test" and msg_type_ar == 1 and msg_type_ak == 0) then
-		if( dev_id:uint() == 0x0b) then -- ITU-T G988 XGPON 
+		if( dev_id:uint() == 0x0b) then -- ITU-T G988 XGPON
 			if( me_class:uint() == 263 ) then -- ANI-G
-				subtree:add(content(0,2), "Size of message content field: " .. content(0,2))  
+				subtree:add(content(0,2), "Size of message content field: " .. content(0,2))
 				subtree:add(content(2,1), "Test to perform: " .. test_message_name[content(2,1):uint()] .. " (" .. content(2,1) .. ")")
 			end
-		elseif( dev_id:uint() == 0x0a) then -- ITU-T G984.4 GPON 
+		elseif( dev_id:uint() == 0x0a) then -- ITU-T G984.4 GPON
 			if( me_class:uint() == 263 ) then -- ANI-G
 				subtree:add(content(0,1), "Test to perform: " .. test_message_name[content(0,1):uint()] .. " (" .. content(0,1) .. ")")
 			end
 		end
 	end
 
-	if(msg_type_mt == "Test Result" and msg_type_ar == 0 and msg_type_ak == 0 ) then	
+	if(msg_type_mt == "Test Result" and msg_type_ar == 0 and msg_type_ak == 0 ) then
 		local content_subtree = subtree:add(content, "Test report")
 		if( me_class_name == "ANI-G" ) then
 			if( content(0,1):uint() == 1 ) then
@@ -841,38 +841,38 @@ function omciproto.dissector (buffer, pinfo, tree)
 			end
 			if( content(3,1):uint() == 3 ) then
 				if( content(4,2):int() ~= 0 ) then
-					content_subtree:add(content(3,3), "Test " .. string.format("%2.2d: ", content(3,1):uint()) .. "Received optical power = " .. content(4,2):int() * 0.002 - 30 .. " dBm (0x" .. content(4,2) .. ")")		
+					content_subtree:add(content(3,3), "Test " .. string.format("%2.2d: ", content(3,1):uint()) .. "Received optical power = " .. content(4,2):int() * 0.002 - 30 .. " dBm (0x" .. content(4,2) .. ")")
 				else
 					content_subtree:add(content(3,3), "Test " .. string.format("%2.2d: ", content(3,1):uint()) .. "Received optical power: Not supported")
 				end
 			else
 				content_subtree:add_expert_info( PI_MALFORMED, PI_ERROR, "Unexpected 0x" .. content(3,1) .. " test at this location " )
-			end		
+			end
 			if( content(6,1):uint() == 5 ) then
 				if( content(7,2):int() ~= 0 ) then
-					content_subtree:add(content(6,3), "Test " .. string.format("%2.2d: ", content(6,1):uint()) .. "Transmitted optical power = " .. content(7,2):int() * 0.002 - 30 .. " dBm (0x" .. content(7,2) .. ")")		
+					content_subtree:add(content(6,3), "Test " .. string.format("%2.2d: ", content(6,1):uint()) .. "Transmitted optical power = " .. content(7,2):int() * 0.002 - 30 .. " dBm (0x" .. content(7,2) .. ")")
 				else
 					content_subtree:add(content(6,3), "Test " .. string.format("%2.2d: ", content(6,1):uint()) .. "Transmitted optical power: Not supported" )
 				end
 			else
 				content_subtree:add_expert_info( PI_MALFORMED, PI_ERROR, "Unexpected 0x" .. content(6,1) .. " test at this location " )
-			end		
+			end
 			if( content(9,1):uint() == 9 ) then
-				content_subtree:add(content(9,3), "Test " .. string.format("%2.2d: ", content(9,1):uint()) .. "Laser bias current = " .. content(10,2):int() * 2 .. " uA (0x" .. content(10,2) .. ")")		
+				content_subtree:add(content(9,3), "Test " .. string.format("%2.2d: ", content(9,1):uint()) .. "Laser bias current = " .. content(10,2):int() * 2 .. " uA (0x" .. content(10,2) .. ")")
 			else
 				content_subtree:add_expert_info( PI_MALFORMED, PI_ERROR, "Unexpected 0x" .. content(9,1) .. " test at this location " )
-			end		
+			end
 			if( content(12,1):uint() == 12 ) then
-				content_subtree:add(content(12,3), "Test " .. string.format("%2.2d: ", content(12,1):uint()) .. "Temperature = " .. content(13,2):int() / 256.0 .. " deg C (0x" .. content(13,2) .. ")")		
+				content_subtree:add(content(12,3), "Test " .. string.format("%2.2d: ", content(12,1):uint()) .. "Temperature = " .. content(13,2):int() / 256.0 .. " deg C (0x" .. content(13,2) .. ")")
 			else
 				content_subtree:add_expert_info( PI_MALFORMED, PI_ERROR, "Unexpected 0x" .. content(13,1) .. " test at this location " )
-			end		
+			end
 		else
 			subtree:add(content, "Test Result for ME Class " .. me_class_name .. " is not implemented!")
 		end
 	end
 
-	if(msg_type_mt == "Alarm" and msg_type_ar == 0 and msg_type_ak == 0 ) then	
+	if(msg_type_mt == "Alarm" and msg_type_ar == 0 and msg_type_ak == 0 ) then
 		local alarm_subtree = subtree:add(content(0,27), "Alarms")
 		local alarm_set = false
 		for i = 0, 27 do --loop through all alarms
@@ -887,11 +887,11 @@ function omciproto.dissector (buffer, pinfo, tree)
 			alarm_subtree:add("All alarms cleared")
 		end
 		alarm_subtree:add(content(28,3), "Padding")
-		alarm_subtree:add(content(31,1), "Sequence number: 0x" .. content(31,1) )		
+		alarm_subtree:add(content(31,1), "Sequence number: 0x" .. content(31,1) )
 	end
-	
+
 	offset = offset + 32
-		
+
 	-- OMCI Trailer (if any)
 	if( buffer:len() > 46) then
 		local trailer = buffer(offset, 8)
@@ -903,7 +903,7 @@ function omciproto.dissector (buffer, pinfo, tree)
 
 	if( msg_type_ar == 0 ) then
 		msg_type_mt = "ONU< " .. msg_type_mt
-	else 
+	else
 		msg_type_mt = "OLT> " .. msg_type_mt
 	end
 
@@ -916,4 +916,4 @@ end
 
 -- Register the dissector
 local ether_table = DissectorTable.get( "ethertype" )
-ether_table:add(0x88B5, omciproto) 
+ether_table:add(0x88B5, omciproto)
