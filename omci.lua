@@ -508,6 +508,16 @@ local omci_def = {
 	{ attname="Wait to restore time", length=1, setbycreate=false },
 	{ attname="Switching guard time", length=2, setbycreate=false }},
 
+[280] = { me_class_name = "Traffic Descriptor",
+	{ attname="CIR", length=2, setbycreate=true },
+	{ attname="PIR", length=4, setbycreate=true },
+	{ attname="CBS", length=4, setbycreate=true },
+	{ attname="PBS", length=4, setbycreate=true },
+	{ attname="Colour mode", length=1, setbycreate=true },
+	{ attname="Ingress Colour Marking", length=1, setbycreate=true },
+    { attname="Egress Colour Marking", length=1, setbycreate=true },
+    { attname="Meter Type", length=1, setbycreate=true}},
+
 [281] = { me_class_name = "Multicast GEM interworking termination point",
 	{ attname="GEM port network CTP connectivity pointer", length=2, setbycreate=true },
 	{ attname="Interworking option", length=1, setbycreate=true },
